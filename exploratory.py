@@ -19,6 +19,7 @@ class main(object):
         R = Reader(csvDoc)
         self.df = R.pricing
         self.df = self.rangeAdding(self.percentile())
+        self.remodel_bool()
 
     def percentile(self):
         x = self.df['SalePrice']
@@ -37,6 +38,10 @@ class main(object):
             else ('Medium' if (x > fR and x <= sR) else 'High'))
     
         return df
+    
+    def remodel_bool(self):
+        self.df['RemodelBool'] = (self.df.YearBuilt == self.df.YearRemodAdd)
+
 
     def avgPricing(self):
 
@@ -146,6 +151,7 @@ class main(object):
         plt.show()
 
     def constr_Year(self):
+        
         df = self.df
         df = df.groupby(df['YearBuilt']).size().to_frame('count')
         df = df.sort_values('YearBuilt', ascending=True)
@@ -157,6 +163,34 @@ class main(object):
         plt.locator_params(axis='x', nbins=12)
         plt.show()
 
+    def remodel_Year(self):
+        
+        df = self.df
+        df = df.copy()[df['RemodelBool']==True]
+        
+        df = df.groupby(df['YearRemodAdd']).size().to_frame('count')
+        df = df.sort_values('YearRemodAdd', ascending=True)
+
+        ax = df.plot.bar(y='count', use_index=True)
+        plt.title('House Remodelation Year')
+        plt.ylabel('Amount of Remodeled Houses')
+        plt.xlabel('Year')
+        plt.locator_params(axis='x', nbins=12)
+        plt.show()
+        
+    def lotArea_Remodel_Pricing(self):
+        df = self.df
+        remodel = df.copy()[df['RemodelBool']==True] 
+        remodel_nt = df.copy()[df['RemodelBool']==False]
+        
+        ax1 = remodel.plot.scatter(x = 'LotArea', y = 'SalePrice', label = 'Remodeled', c = 'blue')
+        ax2 = remodel_nt.plot.scatter(x = 'LotArea', y = 'SalePrice', c = 'red', label = 'Not Remodeled', ax=ax1)
+
+        plt.title('House Pricing according to Remodeling Status & Lot Area')
+        plt.ylabel('House Pricing')
+        plt.xlabel('Lot Area')
+        plt.show()
+
 exp = main('./data/train.csv')
 # exp.Pricing_Boxplot()
 # print(exp.avgPricing())
@@ -165,4 +199,6 @@ exp = main('./data/train.csv')
 # exp.lotArea_slope_Pricing()
 # exp.lotArea_Qlty_Pricing()
 # exp.numerical_Corr()
-exp.constr_Year()
+# exp.constr_Year()
+exp.remodel_Year()
+# exp.lotArea_Remodel_Pricing()
